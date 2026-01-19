@@ -1,9 +1,12 @@
-import express from "express";
-import adminAuth from "../../middleware/admin.middleware.js";
-import { getStats } from "../../controllers/home.controller.js";
+import authMiddleware from "./auth.middleware.js";
 
-const router = express.Router();
+const adminMiddleware = (req, res, next) => {
+  authMiddleware(req, res, () => {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ message: "Admin access denied" });
+    }
+    next();
+  });
+};
 
-router.get("/", adminAuth, getStats);
-
-export default router;
+export default adminMiddleware;
