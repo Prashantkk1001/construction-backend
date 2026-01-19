@@ -20,7 +20,9 @@ import adminProjects from "./routes/admin/project.routes.js";
 import adminAbout from "./routes/admin/about.routes.js";
 import adminEnquiries from "./routes/admin/enquiries.routes.js";
 import adminServices from "./routes/admin/services.routes.js";
+// Replace the adminUpload import line with:
 import adminUpload from "./routes/admin/upload.routes.js";
+
 
 /* ===== PUBLIC ROUTES ===== */
 import publicHome from "./routes/public/home.routes.js";
