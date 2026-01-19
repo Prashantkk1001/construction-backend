@@ -1,18 +1,33 @@
 import express from "express";
 import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
 import adminMiddleware from "../../middleware/admin.middleware.js";
 
 const router = express.Router();
 
+/* ================= ESM dirname fix ================= */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/* ================= MULTER STORAGE (FIXED) ================= */
 const storage = multer.diskStorage({
-  destination: "uploads/",
+  destination: (req, file, cb) => {
+    // uploads folder at PROJECT ROOT
+    cb(null, path.join(__dirname, "../../../uploads"));
+  },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+    const safeName = file.originalname.replace(/\s+/g, "-");
+    cb(null, `${Date.now()}-${safeName}`);
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB
+});
 
+/* ================= UPLOAD API ================= */
 // POST /api/admin/upload/images
 router.post(
   "/images",
@@ -24,10 +39,13 @@ router.post(
     }
 
     const files = req.files.map((file) => ({
-      url: `/uploads/${file.filename}`,
+      url: `/uploads/${file.filename}`, // 👈 frontend uses this
     }));
 
-    res.status(200).json({ success: true, files });
+    res.status(200).json({
+      success: true,
+      files,
+    });
   }
 );
 
