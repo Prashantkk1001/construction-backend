@@ -2,7 +2,10 @@ import app from "./app.js";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
+// ✅ Load env variables
 dotenv.config();
+
+console.log("Mongo URI:", process.env.MONGO_URI); // DEBUG
 
 const PORT = process.env.PORT || 5000;
 
