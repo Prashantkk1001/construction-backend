@@ -24,25 +24,24 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ 
-  storage, 
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Image files only'), false);
+  storage: multer.memoryStorage(),  // RAM → Faster (no disk write)
+  limits: { 
+    fileSize: 5 * 1024 * 1024,  // 5MB
+    files: 10 
   }
 });
 
-// POST /api/admin/upload/images  ← हा frontend call करतो
 router.post('/images', upload.array('images', 10), (req, res) => {
-  console.log('req.files:', req.files); // ← Backend log
-  console.log('req.body:', req.body);
-  
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ error: 'No files uploaded' });
-  }
-  
-  const urls = req.files.map(file => `/uploads/${file.filename}`);
-  res.json({ success: true, urls });
+  // Save to disk after upload
+  const files = [];
+  req.files.forEach(file => {
+    const filename = Date.now() + '-' + file.originalname;
+    const filepath = path.join(__dirname, '../../../uploads', filename);
+    fs.writeFileSync(filepath, file.buffer);
+    files.push(`/uploads/${filename}`);
+  });
+  res.json({ success: true, urls: files });
 });
+
 
 export default router;
