@@ -16,6 +16,9 @@ const __dirname = path.dirname(__filename);
    CORS CONFIG (IMPORTANT)
 =========================== */
 const allowedOrigins = [
+   'http://localhost:8080',      // तुझा frontend port
+    'http://localhost:5173',      // Vite default
+    'http://localhost:3000',
   "https://rkconstruction.vercel.app",    // USER
   "https://rkconstruction-af.vercel.app",  // ADMIN
   "https://construction-backend-wtf2.onrender.com" // backend
