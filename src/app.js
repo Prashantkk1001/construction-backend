@@ -12,15 +12,45 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Middleware
-app.use(cors());
+/* ===========================
+   CORS CONFIG (IMPORTANT)
+=========================== */
+const allowedOrigins = [
+  "https://rkconstruction.vercel.app",    // USER
+  "https://rkconstruction-af.vercel.app",  // ADMIN
+  "https://construction-backend-wtf2.onrender.com" // backend
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow server-to-server / Postman
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+// ✅ IMPORTANT for preflight
+app.options("*", cors());
+
+/* ===========================
+   BODY PARSERS
+=========================== */
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 /* ===========================
-   STATIC UPLOADS (FIXED)
+   STATIC UPLOADS
 =========================== */
-// uploads folder is OUTSIDE src
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "../uploads"))
@@ -36,6 +66,15 @@ import adminEnquiries from "./routes/admin/enquiries.routes.js";
 import adminServices from "./routes/admin/services.routes.js";
 import adminUpload from "./routes/admin/upload.routes.js";
 
+app.use("/api/admin/auth", adminAuth);
+app.use("/api/admin/home", adminHome);
+app.use("/api/admin/contact", adminContact);
+app.use("/api/admin/services", adminServices);
+app.use("/api/admin/projects", adminProjects);
+app.use("/api/admin/about", adminAbout);
+app.use("/api/admin/enquiries", adminEnquiries);
+app.use("/api/admin/upload", adminUpload);
+
 /* ===== PUBLIC ROUTES ===== */
 import publicHome from "./routes/public/home.routes.js";
 import publicContact from "./routes/public/contact.routes.js";
@@ -44,17 +83,6 @@ import publicProjects from "./routes/public/projects.routes.js";
 import publicAbout from "./routes/public/about.routes.js";
 import publicEnquiry from "./routes/public/enquiry.routes.js";
 
-/* ===== ADMIN ROUTES ===== */
-app.use("/api/admin/auth", adminAuth);
-app.use("/api/admin/home", adminHome);
-app.use("/api/admin/contact", adminContact);
-app.use("/api/admin/services", adminServices);
-app.use("/api/admin/projects", adminProjects);
-app.use("/api/admin/about", adminAbout);
-app.use("/api/admin/enquiries", adminEnquiries);
-app.use("/api/admin/upload", adminUpload); // ✅ THIS ENABLES /images
-
-/* ===== PUBLIC ROUTES ===== */
 app.use("/api/home", publicHome);
 app.use("/api/contact", publicContact);
 app.use("/api/services", publicServices);
