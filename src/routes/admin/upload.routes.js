@@ -34,8 +34,15 @@ const upload = multer({
 
 // POST /api/admin/upload/images  ← हा frontend call करतो
 router.post('/images', upload.array('images', 10), (req, res) => {
-  const files = req.files.map(file => `/uploads/${file.filename}`);
-  res.json({ success: true, files });
+  console.log('req.files:', req.files); // ← Backend log
+  console.log('req.body:', req.body);
+  
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ error: 'No files uploaded' });
+  }
+  
+  const urls = req.files.map(file => `/uploads/${file.filename}`);
+  res.json({ success: true, urls });
 });
 
 export default router;
