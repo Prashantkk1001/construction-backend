@@ -1,43 +1,42 @@
-// src/routes/admin/upload.routes.js
 import express from "express";
-import multer from "multer";
+import multer from "multer";  // ✅ MISSING IMPORT
 import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
 
 const router = express.Router();
 
-// ES modules __dirname fix
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Multer (memory storage)
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-    files: 10,
+/* ================= MULTER FOR MULTIPLE IMAGES ================= */
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads");
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueName + path.extname(file.originalname));
   },
 });
 
+const upload = multer({ storage });
+
+/* ================= SINGLE IMAGE ================= */
+router.post("/image", upload.single("image"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+  const imageUrl = `/uploads/${req.file.filename}`;
+  console.log("✅ Single image:", imageUrl);
+  res.json({ success: true, url: imageUrl });
+});
+
+/* ================= MULTIPLE IMAGES (Frontend needs this) ================= */
 router.post("/images", upload.array("images", 10), (req, res) => {
-  const files = [];
-
-  req.files.forEach((file) => {
-    const filename = Date.now() + "-" + file.originalname;
-    const filepath = path.join(__dirname, "../../../uploads", filename);
-
-    fs.writeFileSync(filepath, file.buffer);
-
-    // ✅ ALWAYS production-safe URL
-    const fileUrl = `${process.env.BACKEND_URL}/uploads/${filename}`;
-    files.push(fileUrl);
-  });
-
-  res.json({
-    success: true,
-    urls: files,
-  });
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ message: "No files uploaded" });
+  }
+  
+  const urls = req.files.map((file) => `/uploads/${file.filename}`);
+  console.log("✅ Multiple images:", urls);
+  
+  res.json({ success: true, urls });
 });
 
 export default router;

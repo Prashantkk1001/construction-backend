@@ -1,65 +1,25 @@
-// src/routes/public/projects.routes.js
 import express from "express";
-import Project from "../../models/Project.js";
+import Project from "../../models/Project.js"; // Your Project model
 
 const router = express.Router();
 
-// 🔥 PUBLIC READ-ONLY - User dashboard साठी (NO CREATE/UPDATE/DELETE)
+/* ================= PUBLIC PROJECTS ================= */
 router.get("/", async (req, res) => {
   try {
     const { section } = req.query;
-    const filter = section ? { section: section.toString() } : {};
+    const filter = section ? { section } : {};
     
-    // Public data - published projects only
-    const projects = await Project.find({
-      ...filter,
-      // Add if you have publish status
-      // isPublished: true
-    })
-    .select('-__v')  // Hide Mongo internal fields
-    .sort({ createdAt: -1 })
-    .limit(50)  // Performance
-    .lean();  // Fast JSON
-    
-    // 🔥 FULL URLs - Frontend साठी absolute URLs
-    const projectsWithFullUrls = projects.map(project => ({
-      ...project,
-      images: project.images.map(img => 
-        `https://construction-backend-wtf2.onrender.com${img}`
-      )
-    }));
-    
-    res.json({
-      success: true,
-      count: projectsWithFullUrls.length,
-      data: projectsWithFullUrls
-    });
-    
-  } catch (error) {
-    console.error('Public projects error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Projects fetch failed" 
-    });
-  }
-});
-
-// Optional: Featured projects
-router.get("/featured", async (req, res) => {
-  try {
-    const projects = await Project.find({ isFeatured: true })
-      .limit(6)
+    const projects = await Project.find(filter)
+      .select('-__v') // Hide Mongo internals
       .sort({ createdAt: -1 })
-      .lean();
+      .lean(); // Faster query
     
-    const featured = projects.map(p => ({
-      ...p,
-      images: p.images.map(img => `https://construction-backend-wtf2.onrender.com${img}`)
-    }));
+    console.log(`📋 Public: Found ${projects.length} projects`); // DEBUG
     
-    res.json({ success: true, data: featured });
+    res.json(projects);
   } catch (error) {
-    res.status(500).json({ message: "Featured fetch failed" });
+    console.error("❌ Public projects error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

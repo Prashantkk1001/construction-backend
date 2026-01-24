@@ -16,24 +16,21 @@ const __dirname = path.dirname(__filename);
    CORS CONFIG (IMPORTANT)
 =========================== */
 const allowedOrigins = [
-   'http://localhost:8080',      // तुझा frontend port
-    'http://localhost:5173',      // Vite default
-    'http://localhost:3000',
-  "https://rkconstruction.vercel.app",    // USER
-  "https://rkconstruction-af.vercel.app",  // ADMIN
-  "https://construction-backend-wtf2.onrender.com" // backend
+   'http://localhost:8080',      
+   'http://localhost:5173',      
+   'http://localhost:3000',
+  "https://rkconstruction.vercel.app",    
+  "https://rkconstruction-af.vercel.app",  
+  "https://construction-backend-wtf2.onrender.com"
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow server-to-server / Postman
       if (!origin) return callback(null, true);
-
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
@@ -42,7 +39,6 @@ app.use(
   })
 );
 
-// ✅ IMPORTANT for preflight
 app.options("*", cors());
 
 /* ===========================
@@ -51,13 +47,11 @@ app.options("*", cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-/* ===========================
-   STATIC UPLOADS
-=========================== */
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "../uploads"))
-);
+// ✅ SINGLE STATIC MIDDLEWARE - FIXED!
+const uploadsPath = path.join(__dirname, 'uploads');
+console.log('📁 Serving uploads from:', uploadsPath); // Debug log
+
+app.use('/uploads', express.static(uploadsPath));
 
 /* ===== ADMIN ROUTES ===== */
 import adminAuth from "./routes/admin/auth.routes.js";
@@ -99,6 +93,7 @@ app.get("/api/health", (req, res) => {
     status: "OK",
     uploadEndpoint: "/api/admin/upload/images",
     staticUploads: "/uploads/<filename>",
+    uploadsFolder: uploadsPath,
     time: new Date().toISOString(),
   });
 });
